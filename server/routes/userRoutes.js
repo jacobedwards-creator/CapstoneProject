@@ -52,3 +52,5 @@ router.put('/profile', async (req, res) => {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
+
+export default router;

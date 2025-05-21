@@ -164,3 +164,5 @@ router.post('/logout', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
+
+export default router;
