@@ -5,11 +5,26 @@ const seedData = async () => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    
+    // Clean up existing data
     await client.query('DELETE FROM cart_items');
     await client.query('DELETE FROM reviews');
     await client.query('DELETE FROM order_items');
+    await client.query('DELETE FROM orders');
     await client.query('DELETE FROM products');
-    //users table
+    await client.query('DELETE FROM categories');
+
+    // Create categories table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Create users table
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -21,7 +36,7 @@ const seedData = async () => {
       )
     `);
 
-    //products table
+    // Create products table
     await client.query(`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -30,12 +45,12 @@ const seedData = async () => {
         price DECIMAL(10, 2) NOT NULL,
         stock INTEGER DEFAULT 0,
         image_url VARCHAR(255),
-        category VARCHAR(100),
+        category VARCHAR(100) REFERENCES categories(name),
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
-    //orders table
+    // Create orders table
     await client.query(`
       CREATE TABLE IF NOT EXISTS orders (
         id SERIAL PRIMARY KEY,
@@ -48,7 +63,7 @@ const seedData = async () => {
       )
     `);
 
-    //order_items table
+    // Create order_items table
     await client.query(`
       CREATE TABLE IF NOT EXISTS order_items (
         id SERIAL PRIMARY KEY,
@@ -59,7 +74,7 @@ const seedData = async () => {
       )
     `);
     
-    //refresh tokens table(JWT)
+    // Create refresh tokens table
     await client.query(`
       CREATE TABLE IF NOT EXISTS refresh_tokens (
         id SERIAL PRIMARY KEY,
@@ -70,7 +85,7 @@ const seedData = async () => {
       )
     `);
 
-    //carts table
+    // Create carts table
     await client.query(`
       CREATE TABLE IF NOT EXISTS carts (
         id SERIAL PRIMARY KEY,
@@ -79,7 +94,7 @@ const seedData = async () => {
       )
     `);
 
-    //cart_items table
+    // Create cart_items table
     await client.query(`
       CREATE TABLE IF NOT EXISTS cart_items (
         id SERIAL PRIMARY KEY,
@@ -90,7 +105,7 @@ const seedData = async () => {
       )
     `);
 
-    //reviews table
+    // Create reviews table
     await client.query(`
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
@@ -103,7 +118,19 @@ const seedData = async () => {
       )
     `);
 
-    //admin user creation
+    // Insert categories first
+    await client.query(`
+      INSERT INTO categories (name, description)
+      VALUES 
+        ('Electronics', 'Electronic devices and gadgets'),
+        ('Clothing', 'Apparel and fashion items'),
+        ('Home', 'Home and garden products'),
+        ('Sports', 'Sports and fitness equipment'),
+        ('Books', 'Books and educational materials')
+      ON CONFLICT (name) DO NOTHING
+    `);
+
+    // Create admin user
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('admin123', salt);
     
@@ -113,7 +140,7 @@ const seedData = async () => {
       ON CONFLICT (email) DO NOTHING
     `, [hashedPassword]);
 
-    // test user creation
+    // Create test user
     const testPassword = await bcrypt.hash('password123', salt);
     await client.query(`
       INSERT INTO users (username, email, password, is_admin)
@@ -121,10 +148,7 @@ const seedData = async () => {
       ON CONFLICT (email) DO NOTHING
     `, [testPassword]);
 
-    // Clear existing products first if you want to update them
-    await client.query('DELETE FROM products');
-    
-    // Insert products with matching images
+    // Insert products
     await client.query(`
       INSERT INTO products (name, description, price, stock, image_url, category)
       VALUES 
@@ -150,7 +174,7 @@ const seedData = async () => {
         ('Plant Pot', 'Ceramic plant pot with drainage holes', 19.99, 100, 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80', 'Home')
     `);
 
-    //sample reviews
+    // Insert sample reviews
     await client.query(`
       INSERT INTO reviews (user_id, product_id, rating, comment)
       SELECT 
@@ -164,7 +188,7 @@ const seedData = async () => {
     `);
 
     await client.query('COMMIT');
-    console.log('Database seeded successfully');
+    console.log('Database seeded successfully with categories!');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error:', err.message);

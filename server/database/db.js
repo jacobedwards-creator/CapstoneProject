@@ -7,7 +7,7 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// Debug: Print environment variables (remove after fixing)
+
 console.log('Environment check:');
 console.log('DB_USER:', process.env.DB_USER);
 console.log('DB_PASSWORD exists:', !!process.env.DB_PASSWORD);

@@ -179,7 +179,7 @@ export default function ProductCard({ product, onAddToCart, averageRating = 0, r
             </Typography>
           </Box>
 
-          {/* Price - 🔧 PRICE FIX */}
+          {/* Price - PRICE FIX */}
           <Typography 
             variant="h5" 
             color="primary" 

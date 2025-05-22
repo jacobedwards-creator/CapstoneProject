@@ -1,11 +1,10 @@
 import { pool } from '../db.js';
 
-export const getOrders = async (user_Id) => {
-    const user_id = req.user.id;
-      const result = await pool.query(
-        'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
-        [user_id]
-      );
+export const getOrders = async (userId) => {
+    const result = await pool.query(
+      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
     return result.rows;
   };
   

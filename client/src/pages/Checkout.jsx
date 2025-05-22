@@ -137,15 +137,27 @@ export default function Checkout() {
     try {
       setSubmitting(true);
       
+      console.log('=== CHECKOUT DEBUG ===');
+      console.log('Environment VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+      console.log('Cart items:', cart.items);
+      
+      // Check if cart has proper structure
+      if (!cart.items || cart.items.length === 0) {
+        toast.error('Your cart is empty');
+        return;
+      }
+      
       const orderData = {
         items: cart.items.map(item => ({
-          product_id: item.product_id,
+          product_id: item.product_id || item.id,
           quantity: item.quantity
         })),
         shipping_address: shippingInfo,
         payment_method: paymentMethod
       };
-
+      
+      console.log('Sending order data:', orderData);
+      
       const result = await createOrder(orderData);
       
       if (result.success) {
@@ -155,14 +167,21 @@ export default function Checkout() {
         toast.error(result.error || 'Failed to place order');
       }
     } catch (error) {
-      console.error('Failed to place order:', error);
-      toast.error('Failed to place order');
+      console.error('Checkout error:', error);
+      
+      if (error.response?.status === 404) {
+        toast.error('Order service not available. Please check server.');
+      } else if (error.response?.status === 401) {
+        toast.error('Please log in again');
+        navigate('/login');
+      } else {
+        toast.error('Failed to place order. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
   };
-
-  // 🔧 PRICE FIX - Safe calculation functions
+  // PRICE FIX - Safe calculation functions
   const calculateSubtotal = () => {
     return cart.items.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.quantity), 0);
   };

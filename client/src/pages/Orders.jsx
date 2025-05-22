@@ -39,12 +39,14 @@ import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineC
 import { useAuth } from '../context/AuthContext';
 import { getOrders, getOrderById } from '../utils/api';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderDialog, setOrderDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
@@ -77,6 +79,29 @@ export default function Orders() {
     } catch (error) {
       console.error('Failed to fetch order details:', error);
       toast.error('Failed to load order details');
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setCancellingOrderId(orderId);
+      const response = await axios.patch(`/api/orders/${orderId}/cancel`);
+      
+      if (response.data.success) {
+        toast.success('Order cancelled successfully');
+        fetchOrders(); // Refresh the orders list
+      } else {
+        toast.error(response.data.error || 'Failed to cancel order');
+      }
+    } catch (error) {
+      console.error('Failed to cancel order:', error);
+      toast.error(error.response?.data?.error || 'Failed to cancel order');
+    } finally {
+      setCancellingOrderId(null);
     }
   };
 
@@ -152,6 +177,28 @@ export default function Orders() {
         completed: order.status === 'delivered'
       }
     ];
+
+    if (order.status === 'cancelled') {
+      return (
+        <Timeline>
+          <TimelineItem>
+            <TimelineSeparator>
+              <TimelineDot color="error">
+                <CancelledIcon fontSize="small" />
+              </TimelineDot>
+            </TimelineSeparator>
+            <TimelineContent>
+              <Typography variant="subtitle2" color="error">
+                Order Cancelled
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {new Date(order.updated_at || order.created_at).toLocaleDateString()}
+              </Typography>
+            </TimelineContent>
+          </TimelineItem>
+        </Timeline>
+      );
+    }
 
     return (
       <Timeline>
@@ -231,6 +278,8 @@ export default function Orders() {
       <Stack spacing={3}>
         {orders.map((order) => {
           const orderTotal = calculateOrderTotal(order);
+          const canCancel = ['pending', 'processing'].includes(order.status);
+          const isCancelling = cancellingOrderId === order.id;
           
           return (
             <Card key={order.id}>
@@ -245,6 +294,11 @@ export default function Orders() {
                         <Typography variant="body2" color="text.secondary">
                           Placed on {new Date(order.created_at).toLocaleDateString()}
                         </Typography>
+                        {order.status === 'cancelled' && (
+                          <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                            Cancelled on {new Date(order.updated_at || order.created_at).toLocaleDateString()}
+                          </Typography>
+                        )}
                       </Box>
                       <Chip 
                         label={order.status.toUpperCase()} 
@@ -298,6 +352,20 @@ export default function Orders() {
                         >
                           View Details
                         </Button>
+                        
+                        {/* Cancel Order Button */}
+                        {canCancel && (
+                          <Button 
+                            variant="outlined" 
+                            color="error"
+                            startIcon={isCancelling ? <CircularProgress size={16} /> : <CancelledIcon />}
+                            onClick={() => handleCancelOrder(order.id)}
+                            disabled={isCancelling}
+                            fullWidth
+                          >
+                            {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+                          </Button>
+                        )}
                         
                         {order.tracking_number && (
                           <Button 
