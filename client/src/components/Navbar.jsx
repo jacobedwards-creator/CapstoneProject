@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Added useState import
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -8,26 +8,28 @@ import {
   Box,
   IconButton,
   Badge,
-  Menu,          
-  MenuItem,      
-  Divider        
+  Menu,
+  MenuItem,
+  Divider
 } from '@mui/material';
 import { 
   ShoppingCart as ShoppingCartIcon,
   AccountCircle as AccountCircleIcon,
-  Person as PersonIcon,              
-  Receipt as ReceiptIcon,            
-  ExitToApp as LogoutIcon,           
-  AdminPanelSettings as AdminIcon    
+  Person as PersonIcon,
+  Receipt as ReceiptIcon,
+  ExitToApp as LogoutIcon,
+  AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
-
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
+
+  const cartCount = 0;
   
+  // Profile menu state
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleLogout = async () => {
@@ -35,7 +37,7 @@ export default function Navbar() {
     navigate('/');
   };
 
- 
+  // Profile menu handlers
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -72,20 +74,20 @@ export default function Navbar() {
                 color="inherit" 
                 onClick={() => navigate('/cart')}
               >
-                <Badge badgeContent={0} color="error">
+                <Badge badgeContent={cartCount} color="error">
                   <ShoppingCartIcon />
                 </Badge>
               </IconButton>
               
-              
+              {/* Profile Menu Button */}
               <IconButton 
                 color="inherit" 
-                onClick={handleProfileMenuOpen} 
+                onClick={handleProfileMenuOpen}
               >
                 <AccountCircleIcon />
               </IconButton>
               
-              
+              {/* Profile Dropdown Menu */}
               <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
@@ -114,13 +116,13 @@ export default function Navbar() {
                   Order History
                 </MenuItem>
                 <Divider />
-                {user?.isAdmin && (
+                {user?.is_admin && (
                   <MenuItem onClick={() => handleMenuClick('/admin')}>
                     <AdminIcon sx={{ mr: 2 }} />
                     Admin Dashboard
                   </MenuItem>
                 )}
-                {user?.isAdmin && <Divider />}
+                {user?.is_admin && <Divider />}
                 <MenuItem onClick={handleLogout}>
                   <LogoutIcon sx={{ mr: 2 }} />
                   Logout

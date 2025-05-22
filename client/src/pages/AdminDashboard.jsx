@@ -79,10 +79,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Check if user is admin
-    if (!isAuthenticated || !user?.isAdmin) {
-      navigate('/');
-      toast.error('Access denied. Admin privileges required.');
-      return;
+    if (!isAuthenticated || !user?.is_admin) { 
+        navigate('/');
+        toast.error('Access denied. Admin privileges required.');
+        return;
     }
     
     fetchData();
@@ -432,7 +432,7 @@ export default function AdminDashboard() {
     </Box>
   );
 
-  if (!isAuthenticated || !user?.isAdmin) {
+  if (!isAuthenticated || !user?.is_admin) {
     return null; // Prevents flash before redirect
   }
 
