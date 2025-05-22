@@ -16,7 +16,8 @@ import {
   Search as SearchIcon,
   Clear as ClearIcon
 } from '@mui/icons-material';
-import { getProducts, searchProducts } from '../utils/api';
+
+import { getAllProducts, addToCart } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import ProductCard from '../components/products/ProductCard';
@@ -31,14 +32,12 @@ export default function Home() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  // Debounce search term to avoid too many API calls
   const debouncedSearchTerm = useDebounce ? useDebounce(searchTerm, 300) : searchTerm;
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  // Handle search when debounced term changes
   useEffect(() => {
     handleSearch(debouncedSearchTerm);
   }, [debouncedSearchTerm]);
@@ -46,7 +45,7 @@ export default function Home() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const data = await getProducts();
+      const data = await getAllProducts();
       setProducts(data);
       setFilteredProducts(data);
     } catch (error) {
@@ -67,18 +66,15 @@ export default function Home() {
     try {
       setSearching(true);
       
-      // You can choose to search locally or via API
-      // For now, let's do local search for better performance
       const filtered = products.filter(product =>
         product.name.toLowerCase().includes(term.toLowerCase()) ||
-        product.description?.toLowerCase().includes(term.toLowerCase()) ||
+        (product.description && product.description.toLowerCase().includes(term.toLowerCase())) ||
         product.category.toLowerCase().includes(term.toLowerCase())
       );
       
       setFilteredProducts(filtered);
     } catch (error) {
       console.error('Search failed:', error);
-      // Fallback to local search
       const filtered = products.filter(product =>
         product.name.toLowerCase().includes(term.toLowerCase()) ||
         product.description?.toLowerCase().includes(term.toLowerCase()) ||
@@ -98,8 +94,7 @@ export default function Home() {
     }
     
     try {
-      // This would call your cart API
-      console.log(`Adding product ${productId} with quantity ${quantity} to cart`);
+      await addToCart(productId, quantity);
       toast.success('Added to cart!');
     } catch (error) {
       console.error('Failed to add to cart:', error);
@@ -150,7 +145,7 @@ export default function Home() {
                   mb: 2
                 }}
               >
-                Wares for Weary Travelers
+                The Jacob Emporium
               </Typography>
               
               <Typography 
@@ -180,29 +175,31 @@ export default function Home() {
                 <TextField
                   fullWidth
                   variant="outlined"
-                  placeholder="Search for wares..."
+                  placeholder="Search for products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon color="action" />
-                      </InputAdornment>
-                    ),
-                    endAdornment: searchTerm && (
-                      <InputAdornment position="end">
-                        <IconButton
-                          size="small"
-                          onClick={handleClearSearch}
-                          edge="end"
-                        >
-                          <ClearIcon />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                    sx: {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        border: 'none'
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon color="action" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: searchTerm && (
+                        <InputAdornment position="end">
+                          <IconButton
+                            size="small"
+                            onClick={handleClearSearch}
+                            edge="end"
+                          >
+                            <ClearIcon />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      sx: {
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          border: 'none'
+                        }
                       }
                     }
                   }}
@@ -250,12 +247,12 @@ export default function Home() {
           <Fade in timeout={500}>
             <Paper sx={{ p: 6, textAlign: 'center', mt: 4 }}>
               <Typography variant="h6" gutterBottom>
-                No wares found
+                No products found
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                 We couldn't find any items matching "{searchTerm}". 
                 <br />
-                Try a different search term or browse all our wares below.
+                Try a different search term or browse all our products below.
               </Typography>
             </Paper>
           </Fade>
@@ -266,12 +263,12 @@ export default function Home() {
           <Fade in timeout={700}>
             <Grid container spacing={3}>
               {filteredProducts.map((product) => (
-                <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
+                <Grid key={product.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <ProductCard 
                     product={product} 
                     onAddToCart={handleAddToCart}
-                    averageRating={4.2} // You would get this from your API
-                    reviewCount={Math.floor(Math.random() * 50) + 1} // Demo data
+                    averageRating={4.2} 
+                    reviewCount={Math.floor(Math.random() * 50) + 1}
                   />
                 </Grid>
               ))}

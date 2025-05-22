@@ -27,8 +27,8 @@ export default function CartItem({
   onRemove,
   onToggleFavorite,
   updating = false,
-  readonly = false, // For checkout page
-  showControls = true // Hide controls in checkout review
+  readonly = false,
+  showControls = true
 }) {
   const [localQuantity, setLocalQuantity] = useState(item.quantity);
   const [isFavorite, setIsFavorite] = useState(item.isFavorite || false);
@@ -67,7 +67,8 @@ export default function CartItem({
 
   const isOutOfStock = item.stock === 0;
   const isLowStock = item.stock > 0 && item.stock <= 5;
-  const itemTotal = item.price * item.quantity;
+  // 🔧 PRICE FIX
+  const itemTotal = parseFloat(item.price || 0) * item.quantity;
 
   return (
     <Card 
@@ -80,7 +81,7 @@ export default function CartItem({
       <CardContent>
         <Grid container spacing={2} alignItems="center">
           {/* Product Image */}
-          <Grid item xs={12} sm={3} md={2}>
+          <Grid size={{ xs: 12, sm: 3, md: 2 }}>
             <CardMedia
               component="img"
               height="120"
@@ -100,14 +101,12 @@ export default function CartItem({
           </Grid>
 
           {/* Product Details */}
-          <Grid item xs={12} sm={5} md={4}>
+          <Grid size={{ xs: 12, sm: 5, md: 4 }}>
             <Box>
-              {/* Product Category */}
               <Typography variant="caption" color="text.secondary" gutterBottom>
                 {item.category}
               </Typography>
 
-              {/* Product Name */}
               <Typography 
                 variant="h6" 
                 gutterBottom
@@ -120,7 +119,6 @@ export default function CartItem({
                 {item.name}
               </Typography>
 
-              {/* Product Description (if available) */}
               {item.description && (
                 <Typography 
                   variant="body2" 
@@ -138,12 +136,11 @@ export default function CartItem({
                 </Typography>
               )}
 
-              {/* Price per unit */}
+              {/* Price per unit - 🔧 PRICE FIX */}
               <Typography variant="body2" color="text.secondary">
-                ${item.price.toFixed(2)} each
+                ${parseFloat(item.price || 0).toFixed(2)} each
               </Typography>
 
-              {/* Stock Status */}
               <Box sx={{ mt: 1 }}>
                 {isOutOfStock ? (
                   <Chip label="Out of Stock" color="error" size="small" />
@@ -157,7 +154,7 @@ export default function CartItem({
           </Grid>
 
           {/* Quantity Controls */}
-          <Grid item xs={12} sm={2} md={3}>
+          <Grid size={{ xs: 12, sm: 2, md: 3 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
               <Typography variant="body2" color="text.secondary">
                 Quantity
@@ -177,10 +174,12 @@ export default function CartItem({
                     size="small"
                     value={localQuantity}
                     onChange={handleQuantityInputChange}
-                    inputProps={{ 
-                      min: 1,
-                      max: item.stock || 99,
-                      style: { textAlign: 'center', width: '60px' }
+                    slotProps={{
+                      htmlInput: { 
+                        min: 1,
+                        max: item.stock || 99,
+                        style: { textAlign: 'center', width: '60px' }
+                      }
                     }}
                     disabled={updating || isOutOfStock}
                   />
@@ -199,7 +198,6 @@ export default function CartItem({
                 </Typography>
               )}
 
-              {/* Stock limit warning */}
               {localQuantity >= (item.stock || 99) && item.stock > 0 && (
                 <Typography variant="caption" color="warning.main">
                   Max available: {item.stock}
@@ -209,23 +207,21 @@ export default function CartItem({
           </Grid>
 
           {/* Price and Actions */}
-          <Grid item xs={12} sm={2} md={3}>
+          <Grid size={{ xs: 12, sm: 2, md: 3 }}>
             <Box sx={{ textAlign: 'center' }}>
-              {/* Item Total */}
+              {/* Item Total - 🔧 PRICE FIX */}
               <Typography variant="h6" color="primary" fontWeight="bold">
                 ${itemTotal.toFixed(2)}
               </Typography>
               
               {item.quantity > 1 && (
                 <Typography variant="caption" color="text.secondary">
-                  ${item.price.toFixed(2)} × {item.quantity}
+                  ${parseFloat(item.price || 0).toFixed(2)} × {item.quantity}
                 </Typography>
               )}
 
-              {/* Action Buttons */}
               {showControls && !readonly && (
                 <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                  {/* Favorite Toggle */}
                   <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"}>
                     <IconButton
                       size="small"
@@ -236,7 +232,6 @@ export default function CartItem({
                     </IconButton>
                   </Tooltip>
 
-                  {/* Remove Item */}
                   <Tooltip title="Remove from cart">
                     <IconButton
                       size="small"
@@ -250,13 +245,11 @@ export default function CartItem({
                 </Box>
               )}
 
-              {/* Save for Later (optional) */}
               {showControls && !readonly && (
                 <Button
                   size="small"
                   sx={{ mt: 1, fontSize: '0.75rem' }}
                   onClick={() => {
-                    // Implement save for later functionality
                     console.log('Save for later:', item.id);
                   }}
                 >
@@ -267,7 +260,6 @@ export default function CartItem({
           </Grid>
         </Grid>
 
-        {/* Out of Stock Overlay */}
         {isOutOfStock && (
           <Box
             sx={{

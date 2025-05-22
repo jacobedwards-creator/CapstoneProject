@@ -55,8 +55,6 @@ export default function ProductDetails({ onAddToCart }) {
       setLoading(true);
       const data = await getProductById(id);
       setProduct(data);
-      //fetch review logic goes here!!!!!!!!
-     
     } catch (err) {
       setError('Failed to load product details');
     } finally {
@@ -91,7 +89,6 @@ export default function ProductDetails({ onAddToCart }) {
 
     setSubmittingReview(true);
     try {
-      //submit review logic here!!!!!!!!!
       console.log('Submitting review:', newReview);
       setNewReview({ rating: 5, comment: '' });
     } catch (error) {
@@ -127,11 +124,10 @@ export default function ProductDetails({ onAddToCart }) {
   const isOutOfStock = product.stock === 0;
   const isLowStock = product.stock > 0 && product.stock <= 5;
   const averageRating = 4.2;
-  const reviewCount = 15; //don't forget to connect this to apo!!1!!
+  const reviewCount = 15;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
         <Link 
           color="inherit" 
@@ -152,8 +148,7 @@ export default function ProductDetails({ onAddToCart }) {
       </Breadcrumbs>
 
       <Grid container spacing={4}>
-        {/* Product Images */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper elevation={2}>
             <Box
               component="img"
@@ -169,10 +164,8 @@ export default function ProductDetails({ onAddToCart }) {
           </Paper>
         </Grid>
 
-        {/* Product Info */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box>
-            {/* Category */}
             <Chip 
               label={product.category} 
               color="primary" 
@@ -180,12 +173,10 @@ export default function ProductDetails({ onAddToCart }) {
               sx={{ mb: 2 }} 
             />
 
-            {/* Product Name */}
             <Typography variant="h4" component="h1" gutterBottom>
               {product.name}
             </Typography>
 
-            {/* Rating */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <Rating value={averageRating} precision={0.5} readOnly />
               <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
@@ -193,12 +184,11 @@ export default function ProductDetails({ onAddToCart }) {
               </Typography>
             </Box>
 
-            {/* Price */}
+            {/* Price - 🔧 PRICE FIX */}
             <Typography variant="h3" color="primary" fontWeight="bold" sx={{ mb: 2 }}>
-              ${product.price.toFixed(2)}
+              ${parseFloat(product.price || 0).toFixed(2)}
             </Typography>
 
-            {/* Stock Status */}
             <Box sx={{ mb: 3 }}>
               {isOutOfStock ? (
                 <Chip label="Out of Stock" color="error" />
@@ -209,14 +199,12 @@ export default function ProductDetails({ onAddToCart }) {
               )}
             </Box>
 
-            {/* Description */}
             <Typography variant="body1" paragraph sx={{ mb: 3 }}>
               {product.description}
             </Typography>
 
             <Divider sx={{ my: 3 }} />
 
-            {/* Quantity and Add to Cart */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Quantity:
@@ -227,7 +215,9 @@ export default function ProductDetails({ onAddToCart }) {
                   size="small"
                   value={quantity}
                   onChange={handleQuantityChange}
-                  inputProps={{ min: 1, max: product.stock }}
+                  slotProps={{
+                    htmlInput: { min: 1, max: product.stock }
+                  }}
                   sx={{ width: 100 }}
                   disabled={isOutOfStock}
                 />
@@ -265,17 +255,15 @@ export default function ProductDetails({ onAddToCart }) {
         </Grid>
       </Grid>
 
-      {/* Reviews Section */}
       <Box sx={{ mt: 6 }}>
         <Typography variant="h5" gutterBottom>
           Customer Reviews
         </Typography>
 
-        {/* Review Summary */}
         <Card sx={{ mb: 4 }}>
           <CardContent>
             <Grid container spacing={3} alignItems="center">
-              <Grid item>
+              <Grid size="auto">
                 <Box textAlign="center">
                   <Typography variant="h3" component="div">
                     {averageRating.toFixed(1)}
@@ -286,8 +274,7 @@ export default function ProductDetails({ onAddToCart }) {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs>
-                {/* Rating breakdown would go here */}
+              <Grid size="grow">
                 <Typography variant="body2" color="text.secondary">
                   Customer satisfaction: {Math.round((averageRating / 5) * 100)}%
                 </Typography>
@@ -296,7 +283,6 @@ export default function ProductDetails({ onAddToCart }) {
           </CardContent>
         </Card>
 
-        {/* Add Review Form */}
         {isAuthenticated && (
           <Card sx={{ mb: 4 }}>
             <CardContent>
@@ -335,7 +321,6 @@ export default function ProductDetails({ onAddToCart }) {
           </Card>
         )}
 
-        {/* Reviews List */}
         <Stack spacing={2}>
           {reviews.map((review) => (
             <Card key={review.id}>

@@ -29,10 +29,8 @@ export default function ProductGrid({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Get unique categories from products
   const categories = ['all', ...new Set(products.map(product => product.category))];
 
-  // Filter and sort products
   const filteredProducts = products
     .filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -43,9 +41,9 @@ export default function ProductGrid({
     .sort((a, b) => {
       switch (sortBy) {
         case 'price-low':
-          return a.price - b.price;
+          return parseFloat(a.price || 0) - parseFloat(b.price || 0);
         case 'price-high':
-          return b.price - a.price;
+          return parseFloat(b.price || 0) - parseFloat(a.price || 0);
         case 'name':
           return a.name.localeCompare(b.name);
         case 'newest':
@@ -55,7 +53,6 @@ export default function ProductGrid({
       }
     });
 
-  // Page Link Styling
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
@@ -75,12 +72,10 @@ export default function ProductGrid({
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header */}
       <Typography variant="h4" component="h1" gutterBottom>
         {title}
       </Typography>
 
-      {/* Filters and Search */}
       <Box sx={{ mb: 3 }}>
         <Stack 
           direction={{ xs: 'column', md: 'row' }} 
@@ -88,24 +83,25 @@ export default function ProductGrid({
           alignItems={{ xs: 'stretch', md: 'center' }}
           sx={{ mb: 2 }}
         >
-          {/* Search */}
+          {/* Search - 🔧 SLOTPROPS FIX */}
           <TextField
             placeholder="Search products..."
             variant="outlined"
             size="small"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                )
+              }
             }}
             sx={{ minWidth: 300 }}
           />
 
-          {/* Category Filter */}
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>Category</InputLabel>
             <Select
@@ -121,7 +117,6 @@ export default function ProductGrid({
             </Select>
           </FormControl>
 
-          {/* Sort */}
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel>Sort By</InputLabel>
             <Select
@@ -137,7 +132,6 @@ export default function ProductGrid({
           </FormControl>
         </Stack>
 
-        {/* Active Filters */}
         <Stack direction="row" spacing={1} flexWrap="wrap">
           {searchTerm && (
             <Chip
@@ -156,13 +150,11 @@ export default function ProductGrid({
         </Stack>
       </Box>
 
-      {/* Results Count */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Showing {filteredProducts.length} products
         {filteredProducts.length !== products.length && ` (filtered from ${products.length})`}
       </Typography>
 
-      {/* No Results */}
       {filteredProducts.length === 0 ? (
         <Box 
           sx={{ 
@@ -183,10 +175,10 @@ export default function ProductGrid({
         </Box>
       ) : (
         <>
-          {/* Product Grid */}
+          {/* Product Grid - 🔧 GRID v7 FIX */}
           <Grid container spacing={3}>
             {paginatedProducts.map((product) => (
-              <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
+              <Grid key={product.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                 <ProductCard 
                   product={product} 
                   onAddToCart={onAddToCart}
@@ -197,7 +189,6 @@ export default function ProductGrid({
             ))}
           </Grid>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
               <Pagination

@@ -42,6 +42,7 @@ export default function CartSummary({
   const [couponCode, setCouponCode] = React.useState('');
   const [couponError, setCouponError] = React.useState('');
 
+  // 🔧 PRICE FIX - Calculate item count and totals safely
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const freeShippingProgress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
   const amountForFreeShipping = Math.max(freeShippingThreshold - subtotal, 0);
@@ -64,7 +65,6 @@ export default function CartSummary({
     if (onApplyCoupon) {
       onApplyCoupon(couponCode.trim());
     } else {
-      // Demo coupon codes
       const validCoupons = {
         'SAVE10': { type: 'percentage', value: 10, description: '10% off' },
         'WELCOME': { type: 'fixed', value: 5, description: '$5 off' },
@@ -74,7 +74,6 @@ export default function CartSummary({
       if (validCoupons[couponCode.toUpperCase()]) {
         setCouponError('');
         console.log('Coupon applied:', couponCode);
-        // Don't forget to call API
       } else {
         setCouponError('Invalid coupon code');
       }
@@ -84,7 +83,6 @@ export default function CartSummary({
   return (
     <Card sx={{ position: 'sticky', top: 24 }}>
       <CardContent>
-        {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <ShoppingCartIcon color="primary" />
           <Typography variant="h6">
@@ -101,15 +99,12 @@ export default function CartSummary({
 
         <Divider sx={{ mb: 2 }} />
 
-        {/* Summary Details */}
         <Stack spacing={2}>
-          {/* Subtotal */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography>Subtotal:</Typography>
             <Typography fontWeight="medium">${subtotal.toFixed(2)}</Typography>
           </Box>
 
-          {/* Discount */}
           {discount > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between', color: 'success.main' }}>
               <Typography>Discount:</Typography>
@@ -117,7 +112,6 @@ export default function CartSummary({
             </Box>
           )}
 
-          {/* Shipping */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography>Shipping:</Typography>
@@ -128,11 +122,10 @@ export default function CartSummary({
               )}
             </Box>
             <Typography fontWeight="medium">
-              {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
+              {shipping === 0 ? 'Free' : `${shipping.toFixed(2)}`}
             </Typography>
           </Box>
 
-          {/* Free Shipping Progress */}
           {!qualifiesForFreeShipping && subtotal > 0 && (
             <Alert 
               severity="info" 
@@ -152,7 +145,6 @@ export default function CartSummary({
             </Alert>
           )}
 
-          {/* Free Shipping Achieved */}
           {qualifiesForFreeShipping && shipping === 0 && subtotal > 0 && (
             <Alert severity="success" icon={<ShippingIcon />}>
               <Typography variant="body2">
@@ -161,7 +153,6 @@ export default function CartSummary({
             </Alert>
           )}
 
-          {/* Tax */}
           {tax > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -176,7 +167,6 @@ export default function CartSummary({
 
           <Divider />
 
-          {/* Total */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography variant="h6">Total:</Typography>
             <Typography variant="h6" color="primary" fontWeight="bold">
@@ -184,7 +174,6 @@ export default function CartSummary({
             </Typography>
           </Box>
 
-          {/* Estimated delivery (if not checkout page) */}
           {!isCheckoutPage && subtotal > 0 && (
             <Box sx={{ textAlign: 'center', py: 1 }}>
               <Typography variant="body2" color="text.secondary">
@@ -194,7 +183,6 @@ export default function CartSummary({
           )}
         </Stack>
 
-        {/* Coupon Code Section */}
         {showCouponCode && !isCheckoutPage && (
           <Box sx={{ mt: 3 }}>
             <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -233,14 +221,12 @@ export default function CartSummary({
               </Typography>
             )}
             
-            {/* Demo coupon codes hint */}
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
               Try: SAVE10, WELCOME, or FREESHIP
             </Typography>
           </Box>
         )}
 
-        {/* Checkout Button */}
         {showCheckoutButton && (
           <Button
             variant="contained"
@@ -255,7 +241,6 @@ export default function CartSummary({
           </Button>
         )}
 
-        {/* Security Notice */}
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <SecurityIcon fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
           <Typography variant="caption" color="text.secondary">
@@ -263,7 +248,6 @@ export default function CartSummary({
           </Typography>
         </Box>
 
-        {/* Payment Methods */}
         {!isCheckoutPage && (
           <Box sx={{ mt: 2, textAlign: 'center' }}>
             <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
@@ -278,7 +262,6 @@ export default function CartSummary({
           </Box>
         )}
 
-        {/* Money Back Guarantee */}
         {!isCheckoutPage && (
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="caption">

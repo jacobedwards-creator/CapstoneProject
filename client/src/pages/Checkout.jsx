@@ -49,7 +49,6 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
 
-  // Form data
   const [shippingInfo, setShippingInfo] = useState({
     firstName: '',
     lastName: '',
@@ -151,7 +150,7 @@ export default function Checkout() {
       
       if (result.success) {
         toast.success('Order placed successfully!');
-        navigate('/orders'); // Redirect to orders page
+        navigate('/orders');
       } else {
         toast.error(result.error || 'Failed to place order');
       }
@@ -163,8 +162,9 @@ export default function Checkout() {
     }
   };
 
+  // 🔧 PRICE FIX - Safe calculation functions
   const calculateSubtotal = () => {
-    return cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return cart.items.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.quantity), 0);
   };
 
   const calculateShipping = () => {
@@ -173,7 +173,7 @@ export default function Checkout() {
   };
 
   const calculateTax = () => {
-    return calculateSubtotal() * 0.08; // 8% tax
+    return calculateSubtotal() * 0.08;
   };
 
   const calculateTotal = () => {
@@ -197,7 +197,7 @@ export default function Checkout() {
           Shipping Information
         </Typography>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               required
               fullWidth
@@ -206,7 +206,7 @@ export default function Checkout() {
               onChange={(e) => setShippingInfo({ ...shippingInfo, firstName: e.target.value })}
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               required
               fullWidth
@@ -215,7 +215,7 @@ export default function Checkout() {
               onChange={(e) => setShippingInfo({ ...shippingInfo, lastName: e.target.value })}
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               required
               fullWidth
@@ -225,7 +225,7 @@ export default function Checkout() {
               onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })}
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               required
               fullWidth
@@ -234,7 +234,7 @@ export default function Checkout() {
               onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               required
               fullWidth
@@ -243,7 +243,7 @@ export default function Checkout() {
               onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               required
               fullWidth
@@ -252,7 +252,7 @@ export default function Checkout() {
               onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               required
               fullWidth
@@ -261,7 +261,7 @@ export default function Checkout() {
               onChange={(e) => setShippingInfo({ ...shippingInfo, state: e.target.value })}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <TextField
               required
               fullWidth
@@ -313,7 +313,7 @@ export default function Checkout() {
 
         {paymentMethod === 'credit_card' && (
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 required
                 fullWidth
@@ -322,7 +322,7 @@ export default function Checkout() {
                 onChange={(e) => setPaymentInfo({ ...paymentInfo, cardholderName: e.target.value })}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 required
                 fullWidth
@@ -332,7 +332,7 @@ export default function Checkout() {
                 onChange={(e) => setPaymentInfo({ ...paymentInfo, cardNumber: e.target.value })}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 fullWidth
@@ -342,7 +342,7 @@ export default function Checkout() {
                 onChange={(e) => setPaymentInfo({ ...paymentInfo, expiryDate: e.target.value })}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 fullWidth
@@ -366,7 +366,6 @@ export default function Checkout() {
 
   const renderOrderReview = () => (
     <Stack spacing={3}>
-      {/* Order Items */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
@@ -375,22 +374,22 @@ export default function Checkout() {
           {cart.items.map((item) => (
             <Box key={item.id} sx={{ py: 2, borderBottom: '1px solid #eee' }}>
               <Grid container spacing={2} alignItems="center">
-                <Grid item xs={2}>
+                <Grid size={{ xs: 2 }}>
                   <img
                     src={item.image_url || 'https://via.placeholder.com/60'}
                     alt={item.name}
                     style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
                   />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Typography variant="subtitle1">{item.name}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Quantity: {item.quantity}
                   </Typography>
                 </Grid>
-                <Grid item xs={4} textAlign="right">
+                <Grid size={{ xs: 4 }} sx={{ textAlign: 'right' }}>
                   <Typography variant="subtitle1" fontWeight="bold">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ${(parseFloat(item.price || 0) * item.quantity).toFixed(2)}
                   </Typography>
                 </Grid>
               </Grid>
@@ -399,7 +398,6 @@ export default function Checkout() {
         </CardContent>
       </Card>
 
-      {/* Shipping Information Review */}
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -417,7 +415,6 @@ export default function Checkout() {
         </AccordionDetails>
       </Accordion>
 
-      {/* Payment Method Review */}
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -438,7 +435,6 @@ export default function Checkout() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
         <Link 
           color="inherit" 
@@ -463,7 +459,6 @@ export default function Checkout() {
         Checkout
       </Typography>
 
-      {/* Stepper */}
       <Paper sx={{ p: 3, mb: 4 }}>
         <Stepper activeStep={activeStep} alternativeLabel>
           {steps.map((label) => (
@@ -475,13 +470,11 @@ export default function Checkout() {
       </Paper>
 
       <Grid container spacing={4}>
-        {/* Main Content */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           {activeStep === 0 && renderShippingForm()}
           {activeStep === 1 && renderPaymentForm()}
           {activeStep === 2 && renderOrderReview()}
 
-          {/* Navigation Buttons */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
             <Button
               onClick={handleBack}
@@ -510,8 +503,7 @@ export default function Checkout() {
           </Box>
         </Grid>
 
-        {/* Order Summary */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ position: 'sticky', top: 24 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -547,7 +539,6 @@ export default function Checkout() {
                 </Box>
               </Stack>
 
-              {/* Security Notice */}
               <Box sx={{ mt: 3, textAlign: 'center' }}>
                 <SecurityIcon fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
                 <Typography variant="caption" color="text.secondary">

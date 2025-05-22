@@ -1,19 +1,24 @@
-import { useEffect, useState } from 'react';
-import { getProducts } from '../utils/api';
-import ProductCard from '../components/products/ProductCard';
-import { Box, CircularProgress, Grid } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { getAllProducts, addToCart } from '../utils/api';
+import ProductGrid from '../components/products/ProductGrid';
+import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await getProducts();
+        const data = await getAllProducts();
         setProducts(data);
       } catch (err) {
         console.error('Failed to load products:', err);
+        toast.error('Failed to load products');
       } finally {
         setLoading(false);
       }
@@ -21,21 +26,28 @@ export default function ProductList() {
     fetchProducts();
   }, []);
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const handleAddToCart = async (productId, quantity = 1) => {
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      await addToCart(productId, quantity);
+      toast.success('Added to cart!');
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      toast.error('Failed to add to cart');
+    }
+  };
 
   return (
-    <Grid container spacing={3} p={3}>
-      {products.map((product) => (
-        <Grid item key={product.id} xs={12} sm={6} md={4}>
-          <ProductCard product={product} />
-        </Grid>
-      ))}
-    </Grid>
+    <ProductGrid
+      products={products}
+      loading={loading}
+      onAddToCart={handleAddToCart}
+      title="All Products"
+    />
   );
 }
