@@ -253,12 +253,27 @@ export default function CartSummary({
             <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
               We accept:
             </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, opacity: 0.7 }}>
-              <img src="https://via.placeholder.com/30x20?text=VISA" alt="Visa" style={{ height: '20px' }} />
-              <img src="https://via.placeholder.com/30x20?text=MC" alt="Mastercard" style={{ height: '20px' }} />
-              <img src="https://via.placeholder.com/30x20?text=PP" alt="PayPal" style={{ height: '20px' }} />
-              <img src="https://via.placeholder.com/30x20?text=AP" alt="Apple Pay" style={{ height: '20px' }} />
-            </Box>
+            {!isCheckoutPage && (
+  <Box sx={{ mt: 2, textAlign: 'center' }}>
+    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+      We accept:
+    </Typography>
+    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, opacity: 0.7 }}>
+      <Typography variant="caption" sx={{ px: 1, py: 0.5, border: '1px solid #ddd', borderRadius: 1 }}>
+        VISA
+      </Typography>
+      <Typography variant="caption" sx={{ px: 1, py: 0.5, border: '1px solid #ddd', borderRadius: 1 }}>
+        MC
+      </Typography>
+      <Typography variant="caption" sx={{ px: 1, py: 0.5, border: '1px solid #ddd', borderRadius: 1 }}>
+        PayPal
+      </Typography>
+      <Typography variant="caption" sx={{ px: 1, py: 0.5, border: '1px solid #ddd', borderRadius: 1 }}>
+        Apple Pay
+      </Typography>
+    </Box>
+  </Box>
+)}
           </Box>
         )}
 

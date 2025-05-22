@@ -164,11 +164,7 @@ const seedData = async () => {
     `);
 
     await client.query('COMMIT');
-    console.log('Database seeded successfully with matching product images!');
-    console.log('');
-    console.log('Login credentials:');
-    console.log('Admin: admin@example.com / admin123');
-    console.log('Test User: test@example.com / password123');
+    console.log('Database seeded successfully');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error:', err.message);
