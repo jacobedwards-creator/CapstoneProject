@@ -26,7 +26,7 @@ export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
-
+  // For now, use a static cart count. You can connect this to CartContext later
   const cartCount = 0;
   
   // Profile menu state

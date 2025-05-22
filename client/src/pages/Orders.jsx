@@ -33,10 +33,11 @@ import {
   Cancel as CancelledIcon,
   Visibility as ViewIcon,
   Receipt as ReceiptIcon,
-  LocalShipping as DeliveryIcon
+  LocalShipping as DeliveryIcon,
 } from '@mui/icons-material';
 import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot } from '@mui/lab';
 import { useAuth } from '../context/AuthContext';
+import { getOrders, getOrderById } from '../utils/api';
 import { toast } from 'react-toastify';
 
 export default function Orders() {
@@ -58,109 +59,24 @@ export default function Orders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      // In real app, this would be an API call
-      // const response = await fetch('/api/orders');
-      // const data = await response.json();
-      
-      // Mock data for demo
-      const mockOrders = [
-        {
-          id: 'ORD-001',
-          status: 'delivered',
-          total: 299.97,
-          created_at: '2024-01-15T10:30:00Z',
-          estimated_delivery: '2024-01-20T00:00:00Z',
-          actual_delivery: '2024-01-19T14:30:00Z',
-          items: [
-            {
-              id: 1,
-              name: 'Premium Wireless Headphones',
-              price: 199.99,
-              quantity: 1,
-              image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop'
-            },
-            {
-              id: 2,
-              name: 'Organic Cotton T-Shirt',
-              price: 29.99,
-              quantity: 2,
-              image_url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop'
-            }
-          ],
-          shipping_address: {
-            firstName: 'John',
-            lastName: 'Doe',
-            address: '123 Main St',
-            city: 'New York',
-            state: 'NY',
-            zipCode: '10001'
-          },
-          tracking_number: 'TRK123456789'
-        },
-        {
-          id: 'ORD-002',
-          status: 'shipped',
-          total: 149.99,
-          created_at: '2024-01-20T15:45:00Z',
-          estimated_delivery: '2024-01-25T00:00:00Z',
-          items: [
-            {
-              id: 3,
-              name: 'Smart Fitness Watch',
-              price: 149.99,
-              quantity: 1,
-              image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop'
-            }
-          ],
-          shipping_address: {
-            firstName: 'John',
-            lastName: 'Doe',
-            address: '123 Main St',
-            city: 'New York',
-            state: 'NY',
-            zipCode: '10001'
-          },
-          tracking_number: 'TRK987654321'
-        },
-        {
-          id: 'ORD-003',
-          status: 'processing',
-          total: 79.98,
-          created_at: '2024-01-22T09:15:00Z',
-          estimated_delivery: '2024-01-28T00:00:00Z',
-          items: [
-            {
-              id: 4,
-              name: 'Artisan Coffee Beans',
-              price: 24.99,
-              quantity: 2,
-              image_url: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=100&h=100&fit=crop'
-            },
-            {
-              id: 5,
-              name: 'Organic Cotton T-Shirt',
-              price: 29.99,
-              quantity: 1,
-              image_url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop'
-            }
-          ],
-          shipping_address: {
-            firstName: 'John',
-            lastName: 'Doe',
-            address: '123 Main St',
-            city: 'New York',
-            state: 'NY',
-            zipCode: '10001'
-          }
-        }
-      ];
-      
-      setOrders(mockOrders);
+      const data = await getOrders();
+      setOrders(data);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
       toast.error('Failed to load orders');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrderDetails = async (orderId) => {
+    try {
+      const orderDetails = await getOrderById(orderId);
+      setSelectedOrder(orderDetails);
+      setOrderDialog(true);
+    } catch (error) {
+      console.error('Failed to fetch order details:', error);
+      toast.error('Failed to load order details');
     }
   };
 
@@ -171,6 +87,7 @@ export default function Orders() {
       case 'shipped':
         return 'info';
       case 'processing':
+      case 'pending':
         return 'warning';
       case 'cancelled':
         return 'error';
@@ -186,6 +103,7 @@ export default function Orders() {
       case 'shipped':
         return <ShippingIcon />;
       case 'processing':
+      case 'pending':
         return <OrderIcon />;
       case 'cancelled':
         return <CancelledIcon />;
@@ -195,13 +113,20 @@ export default function Orders() {
   };
 
   const handleViewOrder = (order) => {
-    setSelectedOrder(order);
-    setOrderDialog(true);
+    fetchOrderDetails(order.id);
   };
 
   const handleTrackOrder = (trackingNumber) => {
-    
-    toast.info(`Tracking order: ${trackingNumber}`);
+    toast.info(`Tracking functionality coming soon: ${trackingNumber}`);
+  };
+
+  const calculateOrderTotal = (order) => {
+    if (order.items) {
+      return order.items.reduce((total, item) => {
+        return total + (parseFloat(item.price) * item.quantity);
+      }, 0);
+    }
+    return 0;
   };
 
   const renderOrderTimeline = (order) => {
@@ -223,7 +148,7 @@ export default function Orders() {
       },
       {
         title: 'Delivered',
-        date: order.actual_delivery,
+        date: order.status === 'delivered' ? new Date().toISOString() : null,
         completed: order.status === 'delivered'
       }
     ];
@@ -234,7 +159,7 @@ export default function Orders() {
           <TimelineItem key={index}>
             <TimelineSeparator>
               <TimelineDot color={event.completed ? 'primary' : 'grey'}>
-                {event.completed && <CheckCircle />}
+                {event.completed && <CompletedIcon fontSize="small" />}
               </TimelineDot>
               {index < events.length - 1 && <TimelineConnector />}
             </TimelineSeparator>
@@ -304,86 +229,94 @@ export default function Orders() {
       </Typography>
 
       <Stack spacing={3}>
-        {orders.map((order) => (
-          <Card key={order.id}>
-            <CardContent>
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 8 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box>
-                      <Typography variant="h6" gutterBottom>
-                        Order #{order.id}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Placed on {new Date(order.created_at).toLocaleDateString()}
-                      </Typography>
+        {orders.map((order) => {
+          const orderTotal = calculateOrderTotal(order);
+          
+          return (
+            <Card key={order.id}>
+              <CardContent>
+                <Grid container spacing={3}>
+                  <Grid size={{ xs: 12, md: 8 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                      <Box>
+                        <Typography variant="h6" gutterBottom>
+                          Order #{order.id}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Placed on {new Date(order.created_at).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                      <Chip 
+                        label={order.status.toUpperCase()} 
+                        color={getStatusColor(order.status)}
+                        icon={getStatusIcon(order.status)}
+                      />
                     </Box>
-                    <Chip 
-                      label={order.status.toUpperCase()} 
-                      color={getStatusColor(order.status)}
-                      icon={getStatusIcon(order.status)}
-                    />
-                  </Box>
 
-                  <List dense>
-                    {order.items.map((item) => (
-                      <ListItem key={item.id} sx={{ px: 0 }}>
-                        <ListItemAvatar>
-                          <Avatar 
-                            src={item.image_url} 
-                            variant="rounded"
-                            sx={{ width: 60, height: 60 }}
-                          />
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={item.name}
-                          secondary={`Qty: ${item.quantity} × ${parseFloat(item.price || 0).toFixed(2)}`}
-                          sx={{ ml: 2 }}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
-                    <Typography variant="h5" color="primary" fontWeight="bold" gutterBottom>
-                      ${parseFloat(order.total || 0).toFixed(2)}
-                    </Typography>
-                    
-                    {order.estimated_delivery && (
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Expected: {new Date(order.estimated_delivery).toLocaleDateString()}
+                    {order.items && order.items.length > 0 ? (
+                      <List dense>
+                        {order.items.map((item) => (
+                          <ListItem key={item.id} sx={{ px: 0 }}>
+                            <ListItemAvatar>
+                              <Avatar 
+                                src={item.image_url} 
+                                variant="rounded"
+                                sx={{ width: 60, height: 60 }}
+                              />
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={item.product_name || item.name}
+                              secondary={`Qty: ${item.quantity} × $${parseFloat(item.price || 0).toFixed(2)}`}
+                              sx={{ ml: 2 }}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        Order items not available
                       </Typography>
                     )}
+                  </Grid>
 
-                    <Stack spacing={1} sx={{ mt: 2 }}>
-                      <Button 
-                        variant="outlined" 
-                        startIcon={<ViewIcon />}
-                        onClick={() => handleViewOrder(order)}
-                        fullWidth
-                      >
-                        View Details
-                      </Button>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
+                      <Typography variant="h5" color="primary" fontWeight="bold" gutterBottom>
+                        ${orderTotal.toFixed(2)}
+                      </Typography>
                       
-                      {order.tracking_number && (
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Status: {order.status}
+                      </Typography>
+
+                      <Stack spacing={1} sx={{ mt: 2 }}>
                         <Button 
-                          variant="text" 
-                          startIcon={<DeliveryIcon />}
-                          onClick={() => handleTrackOrder(order.tracking_number)}
+                          variant="outlined" 
+                          startIcon={<ViewIcon />}
+                          onClick={() => handleViewOrder(order)}
                           fullWidth
                         >
-                          Track Package
+                          View Details
                         </Button>
-                      )}
-                    </Stack>
-                  </Box>
+                        
+                        {order.tracking_number && (
+                          <Button 
+                            variant="text" 
+                            startIcon={<DeliveryIcon />}
+                            onClick={() => handleTrackOrder(order.tracking_number)}
+                            fullWidth
+                          >
+                            Track Package
+                          </Button>
+                        )}
+                      </Stack>
+                    </Box>
+                  </Grid>
                 </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </Stack>
 
       {/* Order Details Dialog */}
@@ -400,39 +333,45 @@ export default function Orders() {
                   <Typography variant="h6" gutterBottom>
                     Order Items
                   </Typography>
-                  <List>
-                    {selectedOrder.items.map((item) => (
-                      <ListItem key={item.id} sx={{ px: 0 }}>
-                        <ListItemAvatar>
-                          <Avatar 
-                            src={item.image_url} 
-                            variant="rounded"
-                            sx={{ width: 50, height: 50 }}
+                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                    <List>
+                      {selectedOrder.items.map((item) => (
+                        <ListItem key={item.id} sx={{ px: 0 }}>
+                          <ListItemAvatar>
+                            <Avatar 
+                              src={item.image_url} 
+                              variant="rounded"
+                              sx={{ width: 50, height: 50 }}
+                            />
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={item.product_name || item.name}
+                            secondary={
+                              <Box>
+                                <Typography variant="body2">
+                                  Quantity: {item.quantity}
+                                </Typography>
+                                <Typography variant="body2" color="primary" fontWeight="bold">
+                                  ${parseFloat(item.price || 0).toFixed(2)} each
+                                </Typography>
+                              </Box>
+                            }
+                            sx={{ ml: 2 }}
                           />
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={item.name}
-                          secondary={
-                            <Box>
-                              <Typography variant="body2">
-                                Quantity: {item.quantity}
-                              </Typography>
-                              <Typography variant="body2" color="primary" fontWeight="bold">
-                                ${parseFloat(item.price || 0).toFixed(2)} each
-                              </Typography>
-                            </Box>
-                          }
-                          sx={{ ml: 2 }}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
+                        </ListItem>
+                      ))}
+                    </List>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No items available
+                    </Typography>
+                  )}
 
                   <Divider sx={{ my: 2 }} />
                   
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography>Subtotal:</Typography>
-                    <Typography>${(parseFloat(selectedOrder.total || 0) - 9.99).toFixed(2)}</Typography>
+                    <Typography>${calculateOrderTotal(selectedOrder).toFixed(2)}</Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography>Shipping:</Typography>
@@ -441,7 +380,7 @@ export default function Orders() {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
                     <Typography variant="h6">Total:</Typography>
                     <Typography variant="h6" color="primary">
-                      ${parseFloat(selectedOrder.total || 0).toFixed(2)}
+                      ${(calculateOrderTotal(selectedOrder) + 9.99).toFixed(2)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -456,13 +395,19 @@ export default function Orders() {
                     Shipping Address
                   </Typography>
                   <Paper variant="outlined" sx={{ p: 2 }}>
-                    <Typography>
-                      {selectedOrder.shipping_address.firstName} {selectedOrder.shipping_address.lastName}
-                    </Typography>
-                    <Typography>{selectedOrder.shipping_address.address}</Typography>
-                    <Typography>
-                      {selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} {selectedOrder.shipping_address.zipCode}
-                    </Typography>
+                    {selectedOrder.shipping_address && typeof selectedOrder.shipping_address === 'object' ? (
+                      <Box>
+                        <Typography>
+                          {selectedOrder.shipping_address.firstName} {selectedOrder.shipping_address.lastName}
+                        </Typography>
+                        <Typography>{selectedOrder.shipping_address.address}</Typography>
+                        <Typography>
+                          {selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} {selectedOrder.shipping_address.zipCode}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography>Address information not available</Typography>
+                    )}
                   </Paper>
 
                   {selectedOrder.tracking_number && (

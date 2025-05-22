@@ -80,4 +80,85 @@ router.post('/items', async (req, res) => {
   }
 });
 
+// Update cart item quantity
+router.put('/items/:id', async (req, res) => {
+  try {
+    const { quantity } = req.body;
+    const cartItemId = req.params.id;
+    
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ error: 'Quantity must be at least 1' });
+    }
+    
+    const updatedItem = await updateCartItemQuantity(cartItemId, quantity);
+    
+    if (!updatedItem) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    
+    // Get user's cart to return updated cart data
+    const cart = await getCartByUserId(req.user.id);
+    const cartItems = await getCartItems(cart.id);
+    const total = await getCartTotal(cart.id);
+    
+    res.json({
+      message: 'Cart item updated',
+      cart_id: cart.id,
+      items: cartItems,
+      total
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+// Remove item from cart
+router.delete('/items/:id', async (req, res) => {
+  try {
+    const cartItemId = req.params.id;
+    
+    const removedItem = await removeCartItem(cartItemId);
+    
+    if (!removedItem) {
+      return res.status(404).json({ error: 'Cart item not found' });
+    }
+    
+    // Get user's cart to return updated cart data
+    const cart = await getCartByUserId(req.user.id);
+    const cartItems = await getCartItems(cart.id);
+    const total = await getCartTotal(cart.id);
+    
+    res.json({
+      message: 'Item removed from cart',
+      cart_id: cart.id,
+      items: cartItems,
+      total
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+// Clear entire cart
+router.delete('/', async (req, res) => {
+  try {
+    const cart = await getCartByUserId(req.user.id);
+    
+    if (!cart) {
+      return res.status(404).json({ error: 'Cart not found' });
+    }
+    
+    await clearCart(cart.id);
+    
+    res.json({
+      message: 'Cart cleared',
+      cart_id: cart.id,
+      items: [],
+      total: 0
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
 export default router;

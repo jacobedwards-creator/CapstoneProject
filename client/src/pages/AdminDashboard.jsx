@@ -30,8 +30,7 @@ import {
   Avatar,
   Tabs,
   Tab,
-  Fab,
-  Tooltip
+  CircularProgress
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -44,6 +43,14 @@ import {
   TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import { 
+  getAllProducts, 
+  createProduct, 
+  updateProduct, 
+  deleteProduct,
+  getAllUsers,
+  getAdminStats 
+} from '../utils/api';
 import { toast } from 'react-toastify';
 
 export default function AdminDashboard() {
@@ -79,10 +86,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Check if user is admin
-    if (!isAuthenticated || !user?.is_admin) { 
-        navigate('/');
-        toast.error('Access denied. Admin privileges required.');
-        return;
+    if (!isAuthenticated || !user?.is_admin) {
+      navigate('/');
+      toast.error('Access denied. Admin privileges required.');
+      return;
     }
     
     fetchData();
@@ -106,28 +113,18 @@ export default function AdminDashboard() {
 
   const fetchProducts = async () => {
     try {
-      // In real app, this would be an admin API call
-      const response = await fetch('/api/admin/products');
-      const data = await response.json();
+      const data = await getAllProducts();
       setProducts(data);
     } catch (error) {
-      // Mock data for demo
-      setProducts([
-        { id: 1, name: 'Premium Headphones', price: 199.99, category: 'Electronics', stock: 15, status: 'active' },
-        { id: 2, name: 'Cotton T-Shirt', price: 29.99, category: 'Clothing', stock: 50, status: 'active' },
-        { id: 3, name: 'Fitness Watch', price: 299.99, category: 'Electronics', stock: 8, status: 'active' }
-      ]);
+      console.error('Failed to fetch products:', error);
+      toast.error('Failed to load products');
     }
   };
 
   const fetchUsers = async () => {
     try {
-      // In real app, this would be an admin API call
-      const response = await fetch('/api/admin/users');
-      const data = await response.json();
-      setUsers(data);
-    } catch (error) {
-      // Mock data for demo
+      // For now, use mock data since we don't have admin user endpoint yet
+      // You'll need to create an admin endpoint to get users
       setUsers([
         { 
           id: 1, 
@@ -150,20 +147,31 @@ export default function AdminDashboard() {
           total_spent: 149.97
         }
       ]);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      setUsers([]);
     }
   };
 
   const fetchStats = async () => {
     try {
-      // Mock stats for demo
-      setStats({
-        totalProducts: 125,
-        totalUsers: 1250,
-        totalOrders: 845,
-        revenue: 25670.50
-      });
+      // Calculate stats from actual data
+      const statsData = {
+        totalProducts: products.length,
+        totalUsers: users.length,
+        totalOrders: 0, // You'll need to add order count endpoint
+        revenue: 0 // You'll need to add revenue calculation endpoint
+      };
+      setStats(statsData);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
+      // Use fallback stats
+      setStats({
+        totalProducts: products.length || 0,
+        totalUsers: users.length || 0,
+        totalOrders: 0,
+        revenue: 0
+      });
     }
   };
 
@@ -204,11 +212,11 @@ export default function AdminDashboard() {
 
       if (editingProduct) {
         // Update existing product
-        console.log('Updating product:', editingProduct.id, productData);
+        await updateProduct(editingProduct.id, productData);
         toast.success('Product updated successfully');
       } else {
         // Create new product
-        console.log('Creating new product:', productData);
+        await createProduct(productData);
         toast.success('Product created successfully');
       }
 
@@ -216,7 +224,7 @@ export default function AdminDashboard() {
       fetchProducts(); // Refresh products list
     } catch (error) {
       console.error('Failed to save product:', error);
-      toast.error('Failed to save product');
+      toast.error(error.response?.data?.error || 'Failed to save product');
     }
   };
 
@@ -226,12 +234,12 @@ export default function AdminDashboard() {
     }
 
     try {
-      console.log('Deleting product:', productId);
+      await deleteProduct(productId);
       toast.success('Product deleted successfully');
       fetchProducts(); // Refresh products list
     } catch (error) {
       console.error('Failed to delete product:', error);
-      toast.error('Failed to delete product');
+      toast.error(error.response?.data?.error || 'Failed to delete product');
     }
   };
 
@@ -244,6 +252,7 @@ export default function AdminDashboard() {
   const handleToggleUserStatus = async (userId, currentStatus) => {
     try {
       const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+      // You'll need to implement this API endpoint
       console.log('Toggling user status:', userId, newStatus);
       toast.success(`User ${newStatus === 'active' ? 'activated' : 'suspended'}`);
       fetchUsers(); // Refresh users list
@@ -327,7 +336,6 @@ export default function AdminDashboard() {
               <TableCell>Price</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Stock</TableCell>
-              <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -341,13 +349,6 @@ export default function AdminDashboard() {
                   <Chip 
                     label={product.stock} 
                     color={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'error'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={product.status} 
-                    color={product.status === 'active' ? 'success' : 'default'}
                     size="small"
                   />
                 </TableCell>
@@ -436,6 +437,16 @@ export default function AdminDashboard() {
     return null; // Prevents flash before redirect
   }
 
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress size={60} />
+        </Box>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -469,6 +480,7 @@ export default function AdminDashboard() {
                 label="Product Name"
                 value={productForm.name}
                 onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                required
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -478,10 +490,11 @@ export default function AdminDashboard() {
                 type="number"
                 value={productForm.price}
                 onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                required
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
+              <FormControl fullWidth required>
                 <InputLabel>Category</InputLabel>
                 <Select
                   value={productForm.category}
@@ -489,9 +502,9 @@ export default function AdminDashboard() {
                 >
                   <MenuItem value="Electronics">Electronics</MenuItem>
                   <MenuItem value="Clothing">Clothing</MenuItem>
-                  <MenuItem value="Home & Garden">Home & Garden</MenuItem>
-                  <MenuItem value="Sports & Fitness">Sports & Fitness</MenuItem>
-                  <MenuItem value="Food & Beverage">Food & Beverage</MenuItem>
+                  <MenuItem value="Home">Home</MenuItem>
+                  <MenuItem value="Sports">Sports</MenuItem>
+                  <MenuItem value="Books">Books</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -502,6 +515,7 @@ export default function AdminDashboard() {
                 type="number"
                 value={productForm.stock}
                 onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                required
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

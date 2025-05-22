@@ -1,18 +1,12 @@
 import { pool } from '../db.js';
 
-export const getOrders = async (req, res) => {
+export const getOrders = async (user_Id) => {
     const user_id = req.user.id;
-    
-    try {
       const result = await pool.query(
         'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
         [user_id]
       );
-      
-      res.json(result.rows);
-    } catch (err) {
-      res.status(500).json({ error: 'Database error', details: err.message });
-    }
+    return result.rows;
   };
   
 

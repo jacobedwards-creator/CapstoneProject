@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+// Products API
 export const getAllProducts = async () => {
   const response = await axios.get(`${API_BASE_URL}/products`);
   return response.data;
@@ -110,5 +111,36 @@ export const changePassword = async (currentPassword, newPassword) => {
     currentPassword,
     newPassword
   });
+  return response.data;
+};
+
+// Admin API (for AdminDashboard)
+export const getAllUsers = async () => {
+  const response = await axios.get(`${API_BASE_URL}/admin/users`);
+  return response.data;
+};
+
+export const getAdminStats = async () => {
+  const response = await axios.get(`${API_BASE_URL}/admin/stats`);
+  return response.data;
+};
+
+export const createProduct = async (productData) => {
+  const response = await axios.post(`${API_BASE_URL}/products`, productData);
+  return response.data;
+};
+
+export const updateProduct = async (productId, productData) => {
+  const response = await axios.put(`${API_BASE_URL}/products/${productId}`, productData);
+  return response.data;
+};
+
+export const deleteProduct = async (productId) => {
+  const response = await axios.delete(`${API_BASE_URL}/products/${productId}`);
+  return response.data;
+};
+
+export const updateOrderStatus = async (orderId, status) => {
+  const response = await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, { status });
   return response.data;
 };
