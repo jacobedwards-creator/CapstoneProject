@@ -5,22 +5,31 @@ import { CssBaseline, Box, Typography, Button } from '@mui/material';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// Context Providers
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 
+// Components
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// Pages
+import Home from './pages/Home';
 import ProductList from './pages/ProductList';
 import ProductDetails from './components/products/ProductDetails';
 import Login from './components/auth/Login';
 import Register from './components/auth/register';
-import Home from './pages/Home';
 import CartPage from './pages/CartPage';
 import Checkout from './pages/Checkout';
+import Profile from './pages/Profile';
+import Orders from './pages/Orders';
+import AdminDashboard from './pages/AdminDashboard';
 
+// API functions
 import { addToCart } from './utils/api';
 import { toast } from 'react-toastify';
 
+// Create Material-UI theme
 const theme = createTheme({
   palette: {
     primary: {
@@ -66,6 +75,7 @@ const theme = createTheme({
   },
 });
 
+// 404 Not Found Component
 function NotFound() {
   return (
     <Box 
@@ -96,6 +106,7 @@ function NotFound() {
 }
 
 function App() {
+  // Global cart handler
   const handleAddToCart = async (productId, quantity) => {
     try {
       await addToCart(productId, quantity);
@@ -110,56 +121,86 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <BrowserRouter>
-          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <Navbar />
-            
-            <Box component="main" sx={{ flexGrow: 1 }}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/products" element={<ProductList />} />
-                <Route 
-                  path="/product/:id" 
-                  element={<ProductDetails onAddToCart={handleAddToCart} />} 
-                />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+        <CartProvider>
+          <BrowserRouter>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <Navbar />
+              
+              <Box component="main" sx={{ flexGrow: 1 }}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/products" element={<ProductList />} />
+                  <Route 
+                    path="/product/:id" 
+                    element={<ProductDetails onAddToCart={handleAddToCart} />} 
+                  />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
 
-                <Route 
-                  path="/cart" 
-                  element={
-                    <ProtectedRoute>
-                      <CartPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/checkout" 
-                  element={
-                    <ProtectedRoute>
-                      <Checkout />
-                    </ProtectedRoute>
-                  } 
-                />
+                  {/* Protected Routes */}
+                  <Route 
+                    path="/cart" 
+                    element={
+                      <ProtectedRoute>
+                        <CartPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/checkout" 
+                    element={
+                      <ProtectedRoute>
+                        <Checkout />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/orders" 
+                    element={
+                      <ProtectedRoute>
+                        <Orders />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <ProtectedRoute>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                  {/* 404 Route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Box>
+
+              {/* Toast Container */}
+              <ToastContainer
+                position="bottom-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
             </Box>
-
-            <ToastContainer
-              position="bottom-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-            />
-          </Box>
-        </BrowserRouter>
+          </BrowserRouter>
+        </CartProvider>
       </AuthProvider>
     </ThemeProvider>
   );

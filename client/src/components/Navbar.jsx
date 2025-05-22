@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react'; // Added useState import
 import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -7,21 +7,46 @@ import {
   Button,
   Box,
   IconButton,
-  Badge
+  Badge,
+  Menu,          
+  MenuItem,      
+  Divider        
 } from '@mui/material';
 import { 
   ShoppingCart as ShoppingCartIcon,
-  AccountCircle as AccountCircleIcon 
+  AccountCircle as AccountCircleIcon,
+  Person as PersonIcon,              
+  Receipt as ReceiptIcon,            
+  ExitToApp as LogoutIcon,           
+  AdminPanelSettings as AdminIcon    
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+
+ 
+  const handleProfileMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleMenuClick = (path) => {
+    navigate(path);
+    handleProfileMenuClose();
   };
 
   return (
@@ -52,12 +77,55 @@ export default function Navbar() {
                 </Badge>
               </IconButton>
               
+              
               <IconButton 
                 color="inherit" 
-                onClick={() => navigate('/profile')}
+                onClick={handleProfileMenuOpen} 
               >
                 <AccountCircleIcon />
               </IconButton>
+              
+              
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleProfileMenuClose}
+                onClick={handleProfileMenuClose}
+                PaperProps={{
+                  elevation: 3,
+                  sx: {
+                    mt: 1.5,
+                    minWidth: 200,
+                    '& .MuiMenuItem-root': {
+                      px: 2,
+                      py: 1,
+                    },
+                  },
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                <MenuItem onClick={() => handleMenuClick('/profile')}>
+                  <PersonIcon sx={{ mr: 2 }} />
+                  My Profile
+                </MenuItem>
+                <MenuItem onClick={() => handleMenuClick('/orders')}>
+                  <ReceiptIcon sx={{ mr: 2 }} />
+                  Order History
+                </MenuItem>
+                <Divider />
+                {user?.isAdmin && (
+                  <MenuItem onClick={() => handleMenuClick('/admin')}>
+                    <AdminIcon sx={{ mr: 2 }} />
+                    Admin Dashboard
+                  </MenuItem>
+                )}
+                {user?.isAdmin && <Divider />}
+                <MenuItem onClick={handleLogout}>
+                  <LogoutIcon sx={{ mr: 2 }} />
+                  Logout
+                </MenuItem>
+              </Menu>
               
               <Button color="inherit" onClick={handleLogout}>
                 Logout
